@@ -9,6 +9,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +47,19 @@ public class TaskServiceTest {
     }
 
     @Test
+    public void shouldGetSortedTasks() {
+        Task task2 = new Task(2L, "Another Test", "Description", true);
+        Mockito.when(taskRepository.findAll(Sort.by("title"))).thenReturn(List.of(task2, task));
+
+        List<Task> tasks = taskService.getSortedTasks("title");
+
+        assertNotNull(tasks);
+        assertEquals(2, tasks.size());
+        assertEquals("Another Test", tasks.get(0).getTitle());
+        assertEquals("Test", tasks.get(1).getTitle());
+    }
+
+    @Test
     public void shouldCreateTask() {
         Mockito.when(taskRepository.save(any(Task.class))).thenReturn(task);
 
@@ -73,6 +87,16 @@ public class TaskServiceTest {
         taskService.deleteTask(1L);
 
         Mockito.verify(taskRepository, Mockito.times(1)).deleteById(1L);
+    }
+
+    @Test
+    public void shouldToggleTask() {
+        Mockito.when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+
+        taskService.toggleTask(1L);
+
+        assertTrue(task.isCompleted());
+        Mockito.verify(taskRepository).save(task);
     }
 
     @Test
